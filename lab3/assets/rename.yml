@@ -1,0 +1,42 @@
+- name: Configure CHR using netbox data
+  hosts: chr_devices
+  gather_facts: no
+  vars:
+    api_endpoint: http://94.26.224.44:8000
+    token: 4fe5b9999b0274a3d6eae0f216c24555d6af4517
+  tasks:
+
+    - name: Get netbox data
+      set_fact:
+        devices: "{{ query('netbox.netbox.nb_lookup', 'devices', api_endpoint=api_endpoint, token=token, valida>
+
+    - name: Extract router names and ips
+      set_fact:
+        router1_name: "{{ devices[0].value.name }}"
+        router1_ip: "{{ devices[0].value.primary_ip4.address }}"
+        router2_name: "{{ devices[1].value.name }}"
+        router2_ip: "{{ devices[1].value.primary_ip4.address }}"
+
+    - name: Debug IP and name
+      debug:
+        msg: "Setting IP {{ router1_ip }} and name {{ router1_name }} on {{ inventory_hostname }}"
+      when: inventory_hostname == 'chr1'
+
+    - name: Configure CHR 1 name and ip
+      community.routeros.command:
+        commands:
+          - /ip address add address={{ router1_ip }} interface=wg0
+          - /system identity set name={{ router1_name }}
+      when: inventory_hostname == 'chr1'
+
+    - name: Debug IP and name
+      debug:
+        msg: "Setting IP {{ router2_ip }} and name {{ router2_name }} on {{ inventory_hostname }}"
+      when: inventory_hostname == 'chr2'
+
+    - name: Configure CHR 2 name and ip
+      community.routeros.command:
+        commands:
+          - /ip address add address={{ router2_ip }} interface=wg0
+          - /system identity set name={{ router2_name }}
+      when: inventory_hostname == 'chr2'

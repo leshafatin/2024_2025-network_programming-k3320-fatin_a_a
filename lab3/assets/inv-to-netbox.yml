@@ -1,0 +1,16 @@
+- name: Save Netbox Data
+  hosts: localhost
+  gather_facts: no
+  vars:
+    api_endpoint: http://94.26.224.44:8000
+    token: <token>
+  tasks:
+    - name: Get netbox devices data
+      set_fact:
+        devices: "{{ query('netbox.netbox.nb_lookup', 'devices', api_endpoint=api_endpoint, token=token, valida>
+
+    - name: Save data to file
+      copy:
+        content:
+          - "{{ devices }}"
+        dest: devices.json
